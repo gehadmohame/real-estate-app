@@ -1,54 +1,46 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
-
-import Home from "./pages/Home";
-import Buy from "./pages/Buy";
-import Sell from "./pages/Sell";
-import Admin from "./pages/Admin";
-import PropertyDetails from "./pages/PropertyDetails";
-import Request from "./pages/Request";
-import Chat from "./pages/Chat";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Navbar from "./components/Navbar";
 
+// 🏡 Pages
+import Home from "./pages/Home";
+import Buy from "./pages/Buy";
+import Sell from "./pages/Sell";
+import Chat from "./pages/Chat";
+import Favorites from "./pages/Favorites";
+import PropertyDetails from "./pages/PropertyDetails";
+
+// 🧑‍💼 Admin
+import AdminProperties from "./pages/AdminProperties";
+import AdminChat from "./pages/AdminChat";
+
+// 📡 API
 import { getPropertiesFB } from "./api/properties";
 
 export default function App() {
   const [properties, setProperties] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return localStorage.getItem("isAdmin") === "true";
-  });
-
-  // 🔥 Load Firebase data
+  // 📥 Load properties safely (🔥 مهم جدًا)
   useEffect(() => {
-    const fetchData = async () => {
+    const load = async () => {
       try {
         const data = await getPropertiesFB();
-        setProperties(data);
+        setProperties(data || []);
       } catch (err) {
-        console.log("Firebase error:", err);
+        console.error("🔥 Firebase Error:", err);
+        setProperties([]); // fallback
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
+    load();
   }, []);
 
-  // 💾 Save favorites
-  useEffect(() => {
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-  }, [favorites]);
-
-  useEffect(() => {
-    localStorage.setItem("isAdmin", isAdmin);
-  }, [isAdmin]);
-
-  // ❤️ toggle favorite
+  // ❤️ Toggle Favorite
   const toggleFavorite = (property) => {
     const exists = favorites.find((f) => f.id === property.id);
 
@@ -59,18 +51,23 @@ export default function App() {
     }
   };
 
+  // ⏳ Loading UI (🔥 يمنع white screen)
+  if (loading) {
+    return (
+      <div style={{ padding: 50, textAlign: "center" }}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
   return (
-    <Router>
+    <BrowserRouter>
       <Navbar />
 
       <Routes>
-        {/* 🏡 HOME (MAP + FILTERS) */}
-        <Route
-          path="/"
-          element={<Home properties={properties} />}
-        />
+        {/* 🏡 Public */}
+        <Route path="/" element={<Home properties={properties} />} />
 
-        {/* 🏠 BUY (approved only inside page) */}
         <Route
           path="/buy"
           element={
@@ -82,70 +79,32 @@ export default function App() {
           }
         />
 
-        {/* 🏡 SELL */}
         <Route path="/sell" element={<Sell />} />
 
-        {/* 📄 DETAILS */}
-        <Route
-          path="/property/:id"
-          element={
-            <PropertyDetails
-              properties={properties}
-              toggleFavorite={toggleFavorite}
-            />
-          }
-        />
-
-        {/* 📩 REQUEST */}
-        <Route path="/request" element={<Request />} />
-
-        {/* 💬 CHAT */}
         <Route path="/chat" element={<Chat />} />
 
-        {/* 🔐 ADMIN */}
+        <Route path="/favorites" element={<Favorites />} />
+
         <Route
-          path="/admin"
+          path="/property/:id"
+          element={<PropertyDetails properties={properties} />}
+        />
+
+        {/* 🧑‍💼 Admin */}
+        <Route path="/admin" element={<AdminProperties />} />
+        <Route path="/admin/properties" element={<AdminProperties />} />
+        <Route path="/admin/chat" element={<AdminChat />} />
+
+        {/* 🚨 404 */}
+        <Route
+          path="*"
           element={
-            isAdmin ? (
-              <Admin setIsAdmin={setIsAdmin} />
-            ) : (
-              <LoginAdmin setIsAdmin={setIsAdmin} />
-            )
+            <div style={{ padding: 20 }}>
+              <h2>404 - Page Not Found</h2>
+            </div>
           }
         />
       </Routes>
-    </Router>
-  );
-}
-
-/* 🔐 LOGIN ADMIN */
-function LoginAdmin({ setIsAdmin }) {
-  const [password, setPassword] = useState("");
-
-  const handleLogin = () => {
-    if (password === "1234") {
-      setIsAdmin(true);
-      localStorage.setItem("isAdmin", "true");
-    } else {
-      alert("Wrong password ❌");
-    }
-  };
-
-  return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>🔐 Admin Login</h2>
-
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ padding: "10px" }}
-      />
-
-      <br />
-      <br />
-
-      <button onClick={handleLogin}>Login</button>
-    </div>
+    </BrowserRouter>
   );
 }

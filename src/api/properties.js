@@ -11,25 +11,22 @@ import {
 
 const propertiesRef = collection(db, "properties");
 
-
-// ➕ ADD PROPERTY (PENDING BY DEFAULT)
+// ➕ Add Property (always pending)
 export const addPropertyFB = async (property) => {
   try {
     const docRef = await addDoc(propertiesRef, {
       ...property,
-      status: "pending", // 🔥 مهم جدًا
+      status: "pending", // 🔥 مهم جدًا للـ approval system
       createdAt: serverTimestamp(),
     });
 
-    console.log("Property added (pending):", docRef.id);
     return docRef.id;
   } catch (error) {
-    console.log("Add Error:", error);
+    console.log("❌ Add Property Error:", error);
   }
 };
 
-
-// 📥 GET ALL
+// 📥 Get All Properties
 export const getPropertiesFB = async () => {
   try {
     const snapshot = await getDocs(propertiesRef);
@@ -39,33 +36,27 @@ export const getPropertiesFB = async () => {
       ...doc.data(),
     }));
   } catch (error) {
-    console.log("Get Error:", error);
+    console.log("❌ Get Properties Error:", error);
     return [];
   }
 };
 
-
-// ✏️ APPROVE PROPERTY (ADMIN ONLY)
-export const approvePropertyFB = async (id) => {
+// ✏️ Update Property (approve / reject / edit)
+export const updatePropertyFB = async (id, data) => {
   try {
     const ref = doc(db, "properties", id);
-
-    await updateDoc(ref, {
-      status: "approved",
-    });
-
-    console.log("Approved:", id);
+    await updateDoc(ref, data);
   } catch (error) {
-    console.log("Approve Error:", error);
+    console.log("❌ Update Error:", error);
   }
 };
 
-
-// ❌ DELETE
+// ❌ Delete Property
 export const deletePropertyFB = async (id) => {
   try {
-    await deleteDoc(doc(db, "properties", id));
+    const ref = doc(db, "properties", id);
+    await deleteDoc(ref);
   } catch (error) {
-    console.log("Delete Error:", error);
+    console.log("❌ Delete Error:", error);
   }
 };

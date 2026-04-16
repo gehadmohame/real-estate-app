@@ -1,9 +1,13 @@
 import { Link } from "react-router-dom";
 
-export default function Buy({ properties = [], favorites = [], toggleFavorite }) {
-  // 🔥 عرض approved فقط
-  const approvedProperties = properties.filter(
-    (p) => p.status === "approved"
+export default function Buy({
+  properties = [],
+  favorites = [],
+  toggleFavorite,
+}) {
+  // 🔥 approved only + safety
+  const approvedProperties = (properties || []).filter(
+    (p) => p?.status === "approved"
   );
 
   return (
@@ -11,13 +15,20 @@ export default function Buy({ properties = [], favorites = [], toggleFavorite })
       <h2>🏠 Buy Properties</h2>
 
       {approvedProperties.length === 0 ? (
-        <p>No available properties</p>
+        <p>No available properties yet</p>
       ) : (
         <div style={styles.grid}>
           {approvedProperties.map((p) => (
             <div key={p.id} style={styles.card}>
-              <Link to={`/property/${p.id}`} style={{ textDecoration: "none", color: "#000" }}>
-                <img src={p.image} style={styles.img} />
+              <Link
+                to={`/property/${p.id}`}
+                style={{ textDecoration: "none", color: "#000" }}
+              >
+                <img
+                  src={p.image || "https://via.placeholder.com/300"}
+                  style={styles.img}
+                  alt="property"
+                />
 
                 <h3>{p.title}</h3>
                 <p>💰 {p.price}</p>
@@ -26,7 +37,7 @@ export default function Buy({ properties = [], favorites = [], toggleFavorite })
 
               {/* ❤️ Favorite */}
               <button
-                onClick={() => toggleFavorite(p)}
+                onClick={() => toggleFavorite && toggleFavorite(p)}
                 style={{
                   ...styles.favBtn,
                   background: favorites.find((f) => f.id === p.id)

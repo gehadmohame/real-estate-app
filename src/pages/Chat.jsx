@@ -1,43 +1,101 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { sendMessage, listenMessages } from "../api/chat";
+import {
+  createChat,
+  sendMessage,
+  listenMessages,
+  markSeen,
+  setTyping,
+} from "../api/chat";
 
 export default function Chat() {
   const [searchParams] = useSearchParams();
 
-  const propertyId = searchParams.get("propertyId") || "test_property";
-
-  const userId = "buyer_1";
+  const propertyId = searchParams.get("propertyId");
+  const userId = "buyer_1"; // مؤقت
   const sellerId = "seller_1";
+
+  const chatId = `${propertyId}_${userId}_${sellerId}`;
 
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
+  const [typing, setTypingState] = useState(false);
 
-  // 🔥 realtime chat
+  const endRef = useRef(null);
+
+  // 🚨 حماية من crash
+  if (!propertyId) {
+    return (
+      <div style={{ padding: 20 }}>
+        <h3>❌ No chat selected</h3>
+      </div>
+    );
+  }
+
+  // 🟢 create chat
   useEffect(() => {
-    const unsub = listenMessages(propertyId, setMessages);
-    return () => unsub();
-  }, [propertyId]);
+    createChat(chatId, {
+      propertyId,
+      users: [userId, sellerId],
+    });
+  }, [chatId]);
 
-  // 📤 send message
+  // 💬 realtime messages
+  useEffect(() => {
+    const unsub = listenMessages(chatId, (msgs) => {
+      setMessages(msgs);
+
+      // 👁 mark seen
+      msgs.forEach((m) => {
+        if (!m.seenBy?.includes(userId)) {
+          markSeen(chatId, m.id, userId);
+        }
+      });
+    });
+
+    return () => unsub();
+  }, [chatId]);
+
+  // 📤 send
   const handleSend = async () => {
     if (!text.trim()) return;
 
-    await sendMessage({
-      propertyId,
-      senderId: userId,
-      receiverId: sellerId,
+    await sendMessage(chatId, {
       text,
+      senderId: userId,
+      senderRole: "user",
     });
 
     setText("");
+    setTyping(chatId, false, userId);
   };
+
+  // ⌨️ typing
+  const handleTyping = (e) => {
+    setText(e.target.value);
+
+    if (!typing) {
+      setTyping(chatId, true, userId);
+      setTypingState(true);
+    }
+
+    setTimeout(() => {
+      setTyping(chatId, false, userId);
+      setTypingState(false);
+    }, 1500);
+  };
+
+  // 🔥 auto scroll
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
     <div style={styles.container}>
       <h2>💬 Chat</h2>
 
+      {/* 💬 Messages */}
       <div style={styles.box}>
         {messages.map((m) => (
           <div
@@ -45,21 +103,41 @@ export default function Chat() {
             style={{
               ...styles.msg,
               alignSelf:
-                m.senderId === userId ? "flex-end" : "flex-start",
+                m.senderId === userId
+                  ? "flex-end"
+                  : "flex-start",
               background:
                 m.senderId === userId ? "#ff385c" : "#eee",
-              color: m.senderId === userId ? "#fff" : "#000",
+              color:
+                m.senderId === userId ? "#fff" : "#000",
             }}
           >
             {m.text}
+
+            {/* 👁 seen */}
+            {m.senderId === userId && (
+              <small style={styles.seen}>
+                {m.seenBy?.length > 1 ? "✓✓ Seen" : "✓ Sent"}
+              </small>
+            )}
           </div>
         ))}
+
+        <div ref={endRef} />
       </div>
 
+      {/* ⌨️ typing */}
+      {typing && (
+        <p style={{ fontSize: 12, color: "#888" }}>
+          typing...
+        </p>
+      )}
+
+      {/* 📤 Input */}
       <div style={styles.inputBox}>
         <input
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={handleTyping}
           placeholder="Type message..."
           style={styles.input}
         />
@@ -71,10 +149,10 @@ export default function Chat() {
     </div>
   );
 }
-
 const styles = {
   container: {
     padding: 20,
+    fontFamily: "Arial",
   },
 
   box: {
@@ -92,6 +170,13 @@ const styles = {
     padding: 10,
     borderRadius: 10,
     maxWidth: "60%",
+  },
+
+  seen: {
+    display: "block",
+    fontSize: 10,
+    marginTop: 4,
+    opacity: 0.7,
   },
 
   inputBox: {
@@ -113,5 +198,6 @@ const styles = {
     border: "none",
     padding: "10px 15px",
     borderRadius: 8,
+    cursor: "pointer",
   },
 };

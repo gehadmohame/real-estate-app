@@ -1,67 +1,68 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  FaSearch,
-  FaHeart,
   FaHome,
   FaPlusCircle,
-  FaUser,
+  FaHeart,
   FaComments,
+  FaBell,
+  FaUser,
 } from "react-icons/fa";
 
-export default function Navbar() {
-  const [search, setSearch] = useState("");
+import { listenNotifications } from "../api/notifications";
 
-  // 🔥 هنا ممكن نحط default propertyId أو نسيبه فاضي
-  const defaultPropertyId = "test_property";
+export default function Navbar() {
+  const [notifications, setNotifications] = useState([]);
+
+  const userId = "buyer_1"; // 🔥 لاحقًا من auth
+
+  // 🔔 realtime notifications
+  useEffect(() => {
+    const unsub = listenNotifications(userId, setNotifications);
+    return () => unsub();
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !n.seen).length;
 
   return (
     <nav style={styles.nav}>
       {/* 🏡 Logo */}
       <Link to="/" style={styles.logo}>
-        <FaHome size={20} /> StayFinder
+        🏡 StayFinder
       </Link>
 
-      {/* 🔍 Search */}
-      <div style={styles.searchBox}>
-        <FaSearch style={{ marginRight: "8px", color: "#999" }} />
-        <input
-          type="text"
-          placeholder="Search properties..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.input}
-        />
-      </div>
-
-      {/* 📍 Icons */}
-      <div style={styles.icons}>
-        <Link to="/" style={styles.iconBtn} title="Home">
+      {/* 📍 Links */}
+      <div style={styles.links}>
+        <Link to="/" style={styles.icon}>
           <FaHome />
         </Link>
 
-        <Link to="/buy" style={styles.iconBtn} title="Buy">
+        <Link to="/buy" style={styles.icon}>
           🏠
         </Link>
 
-        <Link to="/sell" style={styles.iconBtn} title="Sell">
+        <Link to="/sell" style={styles.icon}>
           <FaPlusCircle />
         </Link>
 
-        <Link to="/favorites" style={styles.iconBtn} title="Favorites">
+        <Link to="/favorites" style={styles.icon}>
           <FaHeart />
         </Link>
 
-        {/* 💬 CHAT (REAL LINK) */}
-        <Link
-          to={`/chat?propertyId=${defaultPropertyId}`}
-          style={styles.iconBtn}
-          title="Chat"
-        >
+        <Link to="/chat" style={styles.icon}>
           <FaComments />
         </Link>
 
-        <Link to="/admin" style={styles.iconBtn} title="Profile">
+        {/* 🔔 Notifications */}
+        <div style={styles.bell}>
+          <FaBell size={18} />
+
+          {unreadCount > 0 && (
+            <span style={styles.badge}>{unreadCount}</span>
+          )}
+        </div>
+
+        <Link to="/admin" style={styles.icon}>
           <FaUser />
         </Link>
       </div>
@@ -69,11 +70,12 @@ export default function Navbar() {
   );
 }
 
+// 🎨 styles
 const styles = {
   nav: {
     display: "flex",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     padding: "12px 20px",
     borderBottom: "1px solid #eee",
     position: "sticky",
@@ -83,43 +85,37 @@ const styles = {
   },
 
   logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "18px",
-    fontWeight: "bold",
     textDecoration: "none",
+    fontWeight: "bold",
+    fontSize: 18,
     color: "#ff385c",
   },
 
-  searchBox: {
-    flex: 1,
+  links: {
     display: "flex",
     alignItems: "center",
-    margin: "0 20px",
-    padding: "8px 12px",
-    border: "1px solid #ddd",
-    borderRadius: "30px",
+    gap: 15,
+    fontSize: 18,
   },
 
-  input: {
-    border: "none",
-    outline: "none",
-    width: "100%",
-  },
-
-  icons: {
-    display: "flex",
-    gap: "15px",
-    alignItems: "center",
-    fontSize: "18px",
-  },
-
-  iconBtn: {
+  icon: {
     textDecoration: "none",
     color: "#333",
-    padding: "8px",
+  },
+
+  bell: {
+    position: "relative",
+    cursor: "pointer",
+  },
+
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    background: "red",
+    color: "#fff",
+    fontSize: 10,
     borderRadius: "50%",
-    transition: "0.2s",
+    padding: "2px 5px",
   },
 };
