@@ -21,19 +21,15 @@ import { getPropertiesFB } from "./api/properties";
 export default function App() {
   const [properties, setProperties] = useState([]);
   const [favorites, setFavorites] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  // 📥 Load properties safely (🔥 مهم جدًا)
+  // 📥 Load properties from Firebase
   useEffect(() => {
     const load = async () => {
       try {
         const data = await getPropertiesFB();
         setProperties(data || []);
       } catch (err) {
-        console.error("🔥 Firebase Error:", err);
-        setProperties([]); // fallback
-      } finally {
-        setLoading(false);
+        console.log("Error loading properties:", err);
       }
     };
 
@@ -51,23 +47,15 @@ export default function App() {
     }
   };
 
-  // ⏳ Loading UI (🔥 يمنع white screen)
-  if (loading) {
-    return (
-      <div style={{ padding: 50, textAlign: "center" }}>
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
       <Navbar />
 
       <Routes>
-        {/* 🏡 Public */}
+        {/* 🏡 Home */}
         <Route path="/" element={<Home properties={properties} />} />
 
+        {/* 🏡 Buy */}
         <Route
           path="/buy"
           element={
@@ -79,12 +67,16 @@ export default function App() {
           }
         />
 
+        {/* 🏡 Sell */}
         <Route path="/sell" element={<Sell />} />
 
+        {/* 💬 Chat */}
         <Route path="/chat" element={<Chat />} />
 
+        {/* ❤️ Favorites */}
         <Route path="/favorites" element={<Favorites />} />
 
+        {/* 🏠 Property Details */}
         <Route
           path="/property/:id"
           element={<PropertyDetails properties={properties} />}
