@@ -1,102 +1,26 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect, useState } from "react";
 
-import Navbar from "./components/Navbar";
+Power@DESKTOP-UG81O16 MINGW64 /e/real-estate-app/client (main)
+$ git add .
+git commit -m "fix blank screen crash"
+git push
+Power@DESKTOP-UG81O16 MINGW64 ~
+$ git add .
+fatal: not a git repository (or any of the parent directories): .git
 
-// 🏡 Pages
-import Home from "./pages/Home";
-import Buy from "./pages/Buy";
-import Sell from "./pages/Sell";
-import Chat from "./pages/Chat";
-import Favorites from "./pages/Favorites";
-import PropertyDetails from "./pages/PropertyDetails";
+Power@DESKTOP-UG81O16 MINGW64 ~
+$ git commit -m "fix blank screen crash"
+fatal: not a git repository (or any of the parent directories): .git
 
-// 🧑‍💼 Admin
-import AdminProperties from "./pages/AdminProperties";
-import AdminChat from "./pages/AdminChat";
+Power@DESKTOP-UG81O16 MINGW64 ~
+$ git push^C
 
-// 📡 API
-import { getPropertiesFB } from "./api/properties";
+Power@DESKTOP-UG81O16 MINGW64 ~
+$ cd /e/real-estate-app/client
 
-export default function App() {
-  const [properties, setProperties] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+Power@DESKTOP-UG81O16 MINGW64 /e/real-estate-app/client (main)
+$ git status
+On branch main
+Your branch is up to date with 'origin/main'.
 
-  // 📥 Load properties from Firebase
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getPropertiesFB();
-        setProperties(data || []);
-      } catch (err) {
-        console.log("Error loading properties:", err);
-      }
-    };
+nothing to commit, working tree clean
 
-    load();
-  }, []);
-
-  // ❤️ Toggle Favorite
-  const toggleFavorite = (property) => {
-    const exists = favorites.find((f) => f.id === property.id);
-
-    if (exists) {
-      setFavorites(favorites.filter((f) => f.id !== property.id));
-    } else {
-      setFavorites([...favorites, property]);
-    }
-  };
-
-  return (
-    <BrowserRouter>
-      <Navbar />
-
-      <Routes>
-        {/* 🏡 Home */}
-        <Route path="/" element={<Home properties={properties} />} />
-
-        {/* 🏡 Buy */}
-        <Route
-          path="/buy"
-          element={
-            <Buy
-              properties={properties}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-            />
-          }
-        />
-
-        {/* 🏡 Sell */}
-        <Route path="/sell" element={<Sell />} />
-
-        {/* 💬 Chat */}
-        <Route path="/chat" element={<Chat />} />
-
-        {/* ❤️ Favorites */}
-        <Route path="/favorites" element={<Favorites />} />
-
-        {/* 🏠 Property Details */}
-        <Route
-          path="/property/:id"
-          element={<PropertyDetails properties={properties} />}
-        />
-
-        {/* 🧑‍💼 Admin */}
-        <Route path="/admin" element={<AdminProperties />} />
-        <Route path="/admin/properties" element={<AdminProperties />} />
-        <Route path="/admin/chat" element={<AdminChat />} />
-
-        {/* 🚨 404 */}
-        <Route
-          path="*"
-          element={
-            <div style={{ padding: 20 }}>
-              <h2>404 - Page Not Found</h2>
-            </div>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  );
-}
