@@ -31,8 +31,8 @@ export default function App() {
       try {
         const data = await getPropertiesFB();
         setProperties(data);
-      } catch (err) {
-        console.log("Firebase error:", err);
+      } catch (error) {
+        console.log("Firebase Error:", error);
       }
     };
 
@@ -71,7 +71,7 @@ export default function App() {
           element={<Home properties={properties} />}
         />
 
-        {/* 🏡 Buy (approved only inside page) */}
+        {/* 🏡 Buy */}
         <Route
           path="/buy"
           element={
@@ -86,7 +86,7 @@ export default function App() {
         {/* 🏗 Sell */}
         <Route path="/sell" element={<Sell />} />
 
-        {/* 📄 Property Details */}
+        {/* 📄 Details */}
         <Route
           path="/property/:id"
           element={<PropertyDetails properties={properties} />}
@@ -95,7 +95,7 @@ export default function App() {
         {/* 📩 Request */}
         <Route path="/request" element={<Request />} />
 
-        {/* 💬 Chat (REAL FIXED ROUTE) */}
+        {/* 💬 Chat (NEW FIXED) */}
         <Route path="/chat" element={<Chat />} />
 
         {/* 🔐 Admin */}
@@ -114,7 +114,7 @@ export default function App() {
   );
 }
 
-// 🔐 Login Admin
+// 🔐 Admin Login Component
 function LoginAdmin({ setIsAdmin }) {
   const [password, setPassword] = useState("");
 
