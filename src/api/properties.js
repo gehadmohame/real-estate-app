@@ -11,14 +11,14 @@ import {
 
 // Firebase config (حطي بيانات مشروعك هنا)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCXKLQTNeSQYBFARxwQlBF2eQsDbLge8To",
+  authDomain: "real-estate-app-791ec.firebaseapp.com",
+  projectId: "real-estate-app-791ec",
+  storageBucket: "real-estate-app-791ec.firebasestorage.app",
+  messagingSenderId: "694930793597",
+  appId: "1:694930793597:web:37e7730a245bbdb2e57d14",
+  measurementId: "G-ZJZRS7D5G8"
 };
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
