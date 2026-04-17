@@ -1,83 +1,69 @@
-import { db } from "../firebase";
+// Firebase Firestore imports
+import { initializeApp } from "firebase/app";
 import {
+  getFirestore,
   collection,
-  addDoc,
   getDocs,
-  updateDoc,
-  deleteDoc,
+  addDoc,
   doc,
-  serverTimestamp,
+  getDoc
 } from "firebase/firestore";
 
-// 📌 Reference
-const propertiesRef = collection(db, "properties");
-
-// ➕ Add Property (default = pending)
-export const addPropertyFB = async (property) => {
-  try {
-    const docRef = await addDoc(propertiesRef, {
-      ...property,
-      status: "pending", // 🔥 مهم
-      createdAt: serverTimestamp(),
-    });
-
-    console.log("✅ Property added:", docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.log("❌ Add Error:", error);
-  }
+// Firebase config (حطي بيانات مشروعك هنا)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-// 📥 Get All
-export const getPropertiesFB = async () => {
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🟢 Reference to collection
+const propertiesCollection = collection(db, "properties");
+
+// 🟢 Get all properties
+export const getProperties = async () => {
   try {
-    const snapshot = await getDocs(propertiesRef);
-
-    const data = snapshot.docs.map((doc) => ({
+    const snapshot = await getDocs(propertiesCollection);
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
-      ...doc.data(),
+      ...doc.data()
     }));
-
-    console.log("🔥 Loaded:", data);
-
-    return data;
   } catch (error) {
-    console.log("❌ Get Error:", error);
+    console.error("Error fetching properties:", error);
     return [];
   }
 };
 
-// ✅ Approve Property (ADMIN)
-export const approvePropertyFB = async (id) => {
+// 🟢 Get single property by id
+export const getPropertyById = async (id) => {
   try {
-    const ref = doc(db, "properties", id);
+    const docRef = doc(db, "properties", id);
+    const snapshot = await getDoc(docRef);
 
-    await updateDoc(ref, {
-      status: "approved",
-    });
-
-    console.log("✅ Approved:", id);
+    if (snapshot.exists()) {
+      return { id: snapshot.id, ...snapshot.data() };
+    } else {
+      return null;
+    }
   } catch (error) {
-    console.log("❌ Approve Error:", error);
+    console.error("Error fetching property:", error);
+    return null;
   }
 };
 
-// ✏️ Update
-export const updatePropertyFB = async (id, data) => {
+// 🟢 Add new property
+export const addProperty = async (data) => {
   try {
-    const ref = doc(db, "properties", id);
-    await updateDoc(ref, data);
+    const docRef = await addDoc(propertiesCollection, data);
+    return docRef.id;
   } catch (error) {
-    console.log("❌ Update Error:", error);
-  }
-};
-
-// ❌ Delete
-export const deletePropertyFB = async (id) => {
-  try {
-    const ref = doc(db, "properties", id);
-    await deleteDoc(ref);
-  } catch (error) {
-    console.log("❌ Delete Error:", error);
+    console.error("Error adding property:", error);
+    return null;
   }
 };
